@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * The type Pgn iterator test.
@@ -150,5 +152,49 @@ public class PgnIteratorTest {
                         "room to fight, before Black gets in ...e6-e5.",
                 commentedMoves.get("42..g4"));
 
+    }
+
+    @Test
+    public void testSiblingVariations() throws Exception {
+
+        Game game = new Game("1", new com.github.bhlangonijr.chesslib.game.Round(
+                new com.github.bhlangonijr.chesslib.game.Event()));
+        game.loadMoveText(new StringBuilder(
+                "1. d4 f5 2. Nc3 Nf6 3. Bg5 d5 4. f3 c5 " +
+                "5. dxc5 (5. e4 Nc6 6. Bb5 a6 (6... h6 7. Bxf6 gxf6 8. exd5) " +
+                "7. Bxc6+ bxc6 8. e5) (5. e3 e6)"));
+
+        Map<Integer, List<MoveList>> variations = game.getVariations();
+        assertNotNull(variations);
+
+        // Find the branch point that has sibling variations (5. e4 ...) and (5. e3 e6)
+        boolean foundSiblings = false;
+        for (Map.Entry<Integer, List<MoveList>> entry : variations.entrySet()) {
+            if (entry.getValue().size() == 2) {
+                foundSiblings = true;
+                List<MoveList> siblings = entry.getValue();
+                String[] san0 = siblings.get(0).toSanArray();
+                String[] san1 = siblings.get(1).toSanArray();
+                // First variation starts with e4
+                assertEquals("e4", san0[0]);
+                // Second variation starts with e3
+                assertEquals("e3", san1[0]);
+                assertEquals("e6", san1[1]);
+            }
+        }
+        assertTrue("Expected sibling variations at the same branch point", foundSiblings);
+
+        // Verify the nested variation (6... h6) also exists
+        boolean foundNested = false;
+        for (List<MoveList> vars : variations.values()) {
+            for (MoveList v : vars) {
+                String[] san = v.toSanArray();
+                if (san.length > 0 && san[0].equals("h6")) {
+                    foundNested = true;
+                    assertEquals(4, san.length); // h6 Bxf6 gxf6 exd5
+                }
+            }
+        }
+        assertTrue("Expected nested variation starting with h6", foundNested);
     }
 }

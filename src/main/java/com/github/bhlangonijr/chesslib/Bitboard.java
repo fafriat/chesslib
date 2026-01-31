@@ -421,7 +421,7 @@ public class Bitboard {
      * @param bb the bitboard to compute
      * @return the resulting bitboard, from which the first bit set to 1 has been unset
      */
-    public static long extractLsb(Long bb) {
+    public static long extractLsb(long bb) {
         return bb & (bb - 1);
     }
 
@@ -431,7 +431,7 @@ public class Bitboard {
      * @param bb the bitboard to check
      * @return {@code true} if the bitboard has only one bit set to 1
      */
-    public static boolean hasOnly1Bit(Long bb) {
+    public static boolean hasOnly1Bit(long bb) {
         return bb != 0L && extractLsb(bb) == 0L;
     }
 

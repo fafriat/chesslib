@@ -354,6 +354,9 @@ public class Board implements Cloneable, BoardEvent {
 
         setHalfMoveCounter(getHalfMoveCounter() + 1);
 
+        if (getEnPassantTarget() != Square.NONE) {
+            incrementalHashKey ^= getEnPassantKey(getEnPassantTarget());
+        }
         setEnPassantTarget(Square.NONE);
         setEnPassant(Square.NONE);
 
@@ -1527,7 +1530,7 @@ public class Board implements Cloneable, BoardEvent {
     public String getPositionId() {
         String[] parts = this.getFen(false).split(StringUtils.SPACE);
         return parts[0] + StringUtils.SPACE + parts[1] + StringUtils.SPACE + parts[2] +
-                (this.getEnPassantTarget() != Square.NONE ? parts[3] : "-");
+                StringUtils.SPACE + (this.getEnPassantTarget() != Square.NONE ? parts[3] : "-");
     }
 
     /**
@@ -1761,6 +1764,7 @@ public class Board implements Cloneable, BoardEvent {
         Board copy = new Board(getContext(), this.updateHistory);
         copy.loadFromFen(this.getFen());
         copy.setEnPassantTarget(this.getEnPassantTarget());
+        copy.incrementalHashKey = this.incrementalHashKey;
         copy.getHistory().clear();
         for (long key : getHistory()) {
             copy.getHistory().add(key);

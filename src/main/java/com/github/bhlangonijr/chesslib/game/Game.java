@@ -17,7 +17,9 @@
 package com.github.bhlangonijr.chesslib.game;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -46,7 +48,7 @@ public class Game {
     private String plyCount;
     private GameResult result;
     private MoveList halfMoves = new MoveList();
-    private Map<Integer, MoveList> variations;
+    private Map<Integer, List<MoveList>> variations;
     private Map<Integer, String> comments;
     private Map<Integer, String> nag;
     private Map<String, String> property;
@@ -246,7 +248,7 @@ public class Game {
      *
      * @return the variations
      */
-    public Map<Integer, MoveList> getVariations() {
+    public Map<Integer, List<MoveList>> getVariations() {
         return variations;
     }
 
@@ -256,7 +258,7 @@ public class Game {
      * @param variations the variations to set
      * @see Game#getVariations()
      */
-    public void setVariations(Map<Integer, MoveList> variations) {
+    public void setVariations(Map<Integer, List<MoveList>> variations) {
         this.variations = variations;
     }
 
@@ -467,10 +469,12 @@ public class Game {
                     }
                 }
                 if (getVariations() != null) {
-                    MoveList var = getVariations().get(variantIndex);
-                    if (var != null) {
-                        variantIndex = translateVariation(sb, var, -1,
-                                variantIndex, index, moveCounter, lastSize);
+                    List<MoveList> vars = getVariations().get(variantIndex);
+                    if (vars != null) {
+                        for (MoveList var : vars) {
+                            variantIndex = translateVariation(sb, var, -1,
+                                    variantIndex, index, moveCounter, lastSize);
+                        }
                         if (index % 2 != 0) {
                             sb.append(moveCounter);
                             sb.append("... ");
@@ -517,15 +521,17 @@ public class Game {
 
                 sb.append(sanMove);
                 sb.append(' ');
-                final MoveList child = getVariations().get(variantIndex);
-                if (child != null) {
-                    if (i == sanArray.length - 1 &&
-                            variantIndexOld != child.getParent()) {
-                        terminated = true;
-                        sb.append(") ");
+                final List<MoveList> children = getVariations().get(variantIndex);
+                if (children != null) {
+                    for (MoveList child : children) {
+                        if (i == sanArray.length - 1 &&
+                                variantIndexOld != child.getParent()) {
+                            terminated = true;
+                            sb.append(") ");
+                        }
+                        variantIndex = translateVariation(sb, child, variantIndexOld,
+                                variantIndex, idx, mc, lastSize);
                     }
-                    variantIndex = translateVariation(sb, child, variantIndexOld,
-                            variantIndex, idx, mc, lastSize);
                 }
                 if (idx % 2 == 0 && idx >= 2
                         && i < sanArray.length - 1) {
@@ -764,6 +770,7 @@ public class Game {
         int halfMove = 0;
         int variantIndex = 0;
 
+        int lastClosedIndex = -1;
         boolean onCommentBlock = false;
         boolean onVariationBlock = false;
         boolean onLineCommentBlock = false;
@@ -821,8 +828,11 @@ public class Game {
                 continue;
             } else if (token.equals("(") &&
                     !(onCommentBlock) || onLineCommentBlock) {
+                int branchIndex = (lastClosedIndex >= 0 && variation.isEmpty())
+                        ? lastClosedIndex : variantIndex;
+                lastClosedIndex = -1;
                 onVariationBlock = true;
-                variation.add(new RTextEntry(variantIndex));
+                variation.add(new RTextEntry(branchIndex));
                 continue;
             } else if (token.equals(")") && onVariationBlock &&
                     !(onCommentBlock) || onLineCommentBlock) {
@@ -850,9 +860,12 @@ public class Game {
                             var.setParent(-1);
                         }
                         if (getVariations() == null) {
-                            setVariations(new HashMap<Integer, MoveList>());
+                            setVariations(new HashMap<Integer, List<MoveList>>());
                         }
-                        getVariations().put(last.index, var);
+                        getVariations().computeIfAbsent(last.index, k -> new ArrayList<>()).add(var);
+                        if (!onVariationBlock) {
+                            lastClosedIndex = last.index;
+                        }
                     } catch (Exception e) {
                         if (last != null) {
                             throw new PgnException("Error while reading variation: " +
@@ -883,6 +896,7 @@ public class Game {
                 }
                 continue;
             }
+            lastClosedIndex = -1;
             variantIndex++;
             halfMove++;
             moves.append(token);

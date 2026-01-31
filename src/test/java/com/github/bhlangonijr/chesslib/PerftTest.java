@@ -189,6 +189,18 @@ public class PerftTest {
         assertEquals(6421514, nodes);
     }
 
+    @Test
+    public void testPerft16() throws MoveGeneratorException {
+      long nodes = testPerft("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1", 5);
+      assertEquals(674624, nodes);
+    }
+
+    @Test
+    public void testPerft17() throws MoveGeneratorException {
+      long nodes = testPerft("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", 5);
+      assertEquals(3605103, nodes);
+    }
+
     /**
      * Test perft long.
      *
@@ -236,9 +248,7 @@ public class PerftTest {
                     throw new IllegalArgumentException("Illegal board state after move: " + move);
                 }
             } catch (Exception e) {
-
                 System.err.println("depth " + depth + " - ply " + ply);
-                e.printStackTrace();
                 throw new IllegalArgumentException(e);
             }
         }

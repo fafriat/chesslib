@@ -375,9 +375,9 @@ public class Board implements Cloneable, BoardEvent {
      */
     public Move undoMove() {
         Move move = null;
-        final MoveBackup b = backup.removeLast();
+        final MoveBackup b = backup.remove(backup.size() - 1);
         if (updateHistory) {
-            getHistory().removeLast();
+            getHistory().remove(getHistory().size() - 1);
         }
         if (b != null) {
             move = b.getMove();

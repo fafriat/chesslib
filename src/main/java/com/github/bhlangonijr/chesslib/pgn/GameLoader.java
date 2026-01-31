@@ -209,7 +209,24 @@ public class GameLoader {
     }
 
     private static boolean isEndGame(String line) {
-        return line.endsWith("1-0") || line.endsWith("0-1") || line.endsWith("1/2-1/2") || line.endsWith("*");
+        String stripped = stripBracketContent(line);
+        return stripped.endsWith("1-0") || stripped.endsWith("0-1") || stripped.endsWith("1/2-1/2") || stripped.endsWith("*");
+    }
+
+    private static String stripBracketContent(String line) {
+        int depth = 0;
+        StringBuilder sb = new StringBuilder(line.length());
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '{') {
+                depth++;
+            } else if (c == '}' && depth > 0) {
+                depth--;
+            } else if (depth == 0) {
+                sb.append(c);
+            }
+        }
+        return sb.toString().trim();
     }
 
     private static class PgnTempContainer {

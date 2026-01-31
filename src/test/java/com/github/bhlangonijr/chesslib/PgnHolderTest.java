@@ -4,12 +4,14 @@ import com.github.bhlangonijr.chesslib.game.Game;
 import com.github.bhlangonijr.chesslib.move.Move;
 import com.github.bhlangonijr.chesslib.move.MoveList;
 import com.github.bhlangonijr.chesslib.pgn.PgnException;
+import com.github.bhlangonijr.chesslib.pgn.GameLoader;
 import com.github.bhlangonijr.chesslib.pgn.PgnHolder;
 import com.github.bhlangonijr.chesslib.pgn.PgnLoadListener;
 import com.github.bhlangonijr.chesslib.util.LargeFile;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -631,6 +633,26 @@ public class PgnHolderTest {
         assertEquals(31, pgn.countGamesInPgnFile());
         pgn.loadPgn();
         assertEquals(31, pgn.getGames().size());
+    }
+
+    @Test
+    public void testGameResultInCommentDoesNotEndParsing() {
+        List<String> lines = Arrays.asList(
+                "[Event \"Test\"]",
+                "[Site \"Test\"]",
+                "[Date \"2024.01.01\"]",
+                "[Round \"1\"]",
+                "[White \"Player1\"]",
+                "[Black \"Player2\"]",
+                "[Result \"0-1\"]",
+                "",
+                "1.f3 e5 2.g3 ( 2.g4 { A very bad move results in 1-0",
+                "in a game between two beginners } ) 2...d5 3.g4 Qh4# 0-1",
+                ""
+        );
+        Game game = GameLoader.loadNextGame(lines.iterator());
+        assertEquals("0-1", game.getResult().getDescription());
+        assertEquals(6, game.getHalfMoves().size());
     }
 
 }

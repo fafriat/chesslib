@@ -309,13 +309,13 @@ public class MoveList extends LinkedList<Move> implements List<Move> {
     @Override
     public Move removeFirst() {
         dirty = true;
-        return super.removeFirst();
+        return super.remove(0);
     }
 
     @Override
     public Move removeLast() {
         dirty = true;
-        return super.removeLast();
+        return super.remove(super.size() - 1);
     }
 
     @Override
